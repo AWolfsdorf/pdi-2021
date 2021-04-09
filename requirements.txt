@@ -13,6 +13,7 @@ decorator==4.4.2
 defusedxml==0.7.1
 entrypoints==0.3
 idna==2.10
+imageio==2.9.0
 ipykernel==5.5.0
 ipython==7.21.0
 ipython-genutils==0.2.0
@@ -38,6 +39,8 @@ nbformat==5.1.2
 nest-asyncio==1.5.1
 notebook==6.3.0
 numpy==1.20.1
+opencv-contrib-python==4.5.1.48
+opencv-python==4.5.1.48
 packaging==20.9
 pandas==1.2.3
 pandocfilters==1.4.3
