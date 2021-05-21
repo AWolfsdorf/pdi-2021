@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import cv2
 import matplotlib.pyplot as plt
 
 
@@ -14,7 +15,7 @@ def negativo(img):
 
 
 def show_histograma(img):
-    plt.hist(img)
+    plt.hist(img, bins=256)
     plt.show()
 
 
@@ -43,3 +44,45 @@ def contrastear(img, funcion_de_constraste):
 def binarizar(img, umbral):
     binary_function = lambda x: 0 if x <= umbral else 255
     return np.array([binary_function(pixel) for pixel in img])
+
+
+def accumulative_relative_frequency_function(r, elems, count, n):
+    accum = 0
+    for index in range(len(elems)):
+        frequency = count[index]
+        accum += frequency / n
+        r_index = elems[index]
+        if r_index == r:
+            break
+    return accum
+
+
+def ecualizar_histograma(img):
+    n = img.size
+    shape = img.shape
+    arrayed_img = img.reshape((-1))
+    elems, count = np.unique(arrayed_img, return_counts=True)
+    return np.array([accumulative_relative_frequency_function(r, elems, count, n) for r in arrayed_img]).reshape(shape)
+
+
+def histogram_enhancement(img, lam):
+    flattened_img = img.ravel()
+    hi, _ = np.histogram(flattened_img, bins=256)
+    h_opt = (hi + np.random.uniform(0, 1, len(hi)) * lam) / (lam + 1)
+    plt.plot(list(range(len(h_opt))), hi, color='blue')
+    plt.plot(list(range(len(h_opt))), h_opt, color='red')
+    plt.figlegend(["original", "enhanced"])
+    plt.show()
+    # enhanced_img = ((flattened_img + np.random.uniform(0, 1, len(flattened_img)) * lam) / (lam + 1)).astype(np.uint8).reshape(img.shape)
+    # show_imgs([img, enhanced_img])
+
+
+def convert_to_grayscale(img):
+    return cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)
+
+
+def show_imgs(imgs, cmap='gray'):
+    _, axarr = plt.subplots(1, len(imgs))
+    for i in range(len(imgs)):
+        axarr[i].imshow(imgs[i], cmap)
+    plt.show()

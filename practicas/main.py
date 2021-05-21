@@ -1,7 +1,5 @@
-import matplotlib.pyplot as plt
 import imageio as io
 import click
-import cv2
 
 from OperadorePuntualesEHistogramas import *
 
@@ -81,15 +79,38 @@ def binarizar_img(p, umbral, use_contrast):
     show_imgs([img, img_binarizada.reshape(img.shape)])
 
 
-def convert_to_grayscale(img):
-    return cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)
+@cli.command()
+@click.option("-p", default="imagenes/boat.png")
+def ecualizar_img(p):
+    """
+    Lee la imagen y muestra la imagen y su histograma
+    """
+    img = convert_to_grayscale(io.imread(p))
 
+    ecualized_img = ecualizar_histograma(img)
+    double_ecualized_img = ecualizar_histograma(ecualized_img)
+    img1_histogram, bin_edges1 = np.histogram(img, bins=256)
+    img2_histogram, bin_edges2 = np.histogram(ecualized_img, bins=256)
+    img3_histogram, bin_edges3 = np.histogram(double_ecualized_img, bins=256)
 
-def show_imgs(imgs, cmap='gray'):
-    _, axarr = plt.subplots(1, len(imgs))
-    for i in range(len(imgs)):
-        axarr[i].imshow(imgs[i], cmap)
+    _, axarr = plt.subplots(1, 3)
+    axarr[0].plot(bin_edges1[0:-1], img1_histogram)
+    axarr[1].plot(bin_edges2[0:-1], img2_histogram)
+    axarr[2].plot(bin_edges3[0:-1], img3_histogram)
     plt.show()
+
+    show_imgs([img, ecualized_img, double_ecualized_img])
+
+@cli.command()
+@click.option("-p", default="imagenes/kodim02.png")
+@click.option("-l", default=1)
+def enhance_histogram(p, l):
+    """
+    Lee la imagen y muestra la imagen enhanced con el lambda l
+    """
+    img = convert_to_grayscale(io.imread(p))
+
+    histogram_enhancement(img, l)
 
 
 if __name__ == "__main__":
