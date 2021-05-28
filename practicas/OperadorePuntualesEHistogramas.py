@@ -2,6 +2,8 @@ import numpy as np
 import math
 import cv2
 import matplotlib.pyplot as plt
+from scipy.sparse import diags, identity
+from scipy.linalg import inv
 
 
 def compresion_de_rango_dinamico(array):
@@ -46,35 +48,27 @@ def binarizar(img, umbral):
     return np.array([binary_function(pixel) for pixel in img])
 
 
-def accumulative_relative_frequency_function(r, elems, count, n):
-    accum = 0
-    for index in range(len(elems)):
-        frequency = count[index]
-        accum += frequency / n
-        r_index = elems[index]
-        if r_index == r:
-            break
-    return accum
+def accumulative_relative_frequency_function(n, p, bins=256):
+    return min(255, math.floor((bins-1) * sum(p[:n]) + 0.5))
 
 
-def ecualizar_histograma(img):
+def ecualizar_histograma(img, hi):
     n = img.size
     shape = img.shape
-    arrayed_img = img.reshape((-1))
-    elems, count = np.unique(arrayed_img, return_counts=True)
-    return np.array([accumulative_relative_frequency_function(r, elems, count, n) for r in arrayed_img]).reshape(shape)
+    flattened_img = img.ravel()
+    p = [hi_val/n for hi_val in hi]
+    return np.array([accumulative_relative_frequency_function(r, p) for r in flattened_img]).reshape(shape)
 
 
-def histogram_enhancement(img, lam):
+def histogram_enhancement(img, lam, gamma):
     flattened_img = img.ravel()
     hi, _ = np.histogram(flattened_img, bins=256)
-    h_opt = (hi + np.random.uniform(0, 1, len(hi)) * lam) / (lam + 1)
-    plt.plot(list(range(len(h_opt))), hi, color='blue')
-    plt.plot(list(range(len(h_opt))), h_opt, color='red')
-    plt.figlegend(["original", "enhanced"])
-    plt.show()
-    # enhanced_img = ((flattened_img + np.random.uniform(0, 1, len(flattened_img)) * lam) / (lam + 1)).astype(np.uint8).reshape(img.shape)
-    # show_imgs([img, enhanced_img])
+    D = diags([-1, 1], [0, 1], shape=(255, 256)).toarray()
+    I = identity(256)
+    avg = int(round(img.size/255))
+    u = np.array([avg for _ in range(256)])
+    h_opt = np.matmul(inv((1 + lam)*I + gamma*np.matmul(D.T, D)), (hi + lam*u))
+    return hi, h_opt, ecualizar_histograma(img, h_opt)
 
 
 def convert_to_grayscale(img):
@@ -84,5 +78,5 @@ def convert_to_grayscale(img):
 def show_imgs(imgs, cmap='gray'):
     _, axarr = plt.subplots(1, len(imgs))
     for i in range(len(imgs)):
-        axarr[i].imshow(imgs[i], cmap)
+        axarr[i].imshow(imgs[i], cmap=cmap, vmin=0, vmax=255)
     plt.show()

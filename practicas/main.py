@@ -18,10 +18,11 @@ def comprimir_en_rango_dinamico(p):
     """
     Lee la imagen y devuelve la imagen comprimida en rango dinamico
     """
-    img = convert_to_grayscale(io.imread(p))
-    original_shape = img.shape
+    img = read_img(p)
     img_compressed = compresion_de_rango_dinamico(img.reshape((-1)))
     show_imgs([img, img_compressed.reshape(img.shape)])
+    plt.hist(img_compressed, bins=256)
+    plt.show()
 
 
 @cli.command()
@@ -30,7 +31,7 @@ def negate_image(p):
     """
     Lee la imagen y devuelve la imagen en negativo
     """
-    img = convert_to_grayscale(io.imread(p))
+    img = read_img(p)
     img_negative = negativo(img.reshape((-1)))
     show_imgs([img, img_negative.reshape(img.shape)])
 
@@ -41,21 +42,21 @@ def histograma(p):
     """
     Lee la imagen y muestra el histograma de los niveles de gris
     """
-    img = convert_to_grayscale(io.imread(p))
+    img = read_img(p)
     show_histograma(img.reshape((-1)))
 
 
 @cli.command()
 @click.option("-p", default="imagenes/boat.png")
-@click.option("-r1", default=50)
-@click.option("-r2", default=180)
-@click.option("-s1", default=20)
-@click.option("-s2", default=230)
+@click.option("-r1", default=150)
+@click.option("-r2", default=250)
+@click.option("-s1", default=50)
+@click.option("-s2", default=250)
 def contrastear_img(p, r1, r2, s1, s2):
     """
     Lee la imagen y muestra el la imagen contrasteada
     """
-    img = convert_to_grayscale(io.imread(p))
+    img = read_img(p)
     funcion_de_constraste = contrast_function_for_points(r1, r2, s1, s2)
     img_contrasteada = contrastear(img.reshape((-1)), funcion_de_constraste)
     show_imgs([img, img_contrasteada.reshape(img.shape)])
@@ -70,7 +71,7 @@ def binarizar_img(p, umbral, use_contrast):
     """
     Lee la imagen y muestra el la imagen binarizada en un cierto umbral
     """
-    img = convert_to_grayscale(io.imread(p))
+    img = read_img(p)
     if (use_contrast):
         funcion_de_constraste = contrast_function_for_points(umbral, umbral, 0, 255)
         img_binarizada = contrastear(img.reshape((-1)), funcion_de_constraste)
@@ -85,12 +86,12 @@ def ecualizar_img(p):
     """
     Lee la imagen y muestra la imagen y su histograma
     """
-    img = convert_to_grayscale(io.imread(p))
+    img = read_img(p)
 
-    ecualized_img = ecualizar_histograma(img)
-    double_ecualized_img = ecualizar_histograma(ecualized_img)
-    img1_histogram, bin_edges1 = np.histogram(img, bins=256)
-    img2_histogram, bin_edges2 = np.histogram(ecualized_img, bins=256)
+    img1_histogram, bin_edges1 = np.histogram(img.ravel(), bins=256)
+    ecualized_img = ecualizar_histograma(img, img1_histogram)
+    img2_histogram, bin_edges2 = np.histogram(ecualized_img.ravel(), bins=256)
+    double_ecualized_img = ecualizar_histograma(ecualized_img, img2_histogram)
     img3_histogram, bin_edges3 = np.histogram(double_ecualized_img, bins=256)
 
     _, axarr = plt.subplots(1, 3)
@@ -104,13 +105,27 @@ def ecualizar_img(p):
 @cli.command()
 @click.option("-p", default="imagenes/kodim02.png")
 @click.option("-l", default=1)
-def enhance_histogram(p, l):
+@click.option("-g", default=1)
+def enhance_histogram(p, l, g):
     """
     Lee la imagen y muestra la imagen enhanced con el lambda l
     """
-    img = convert_to_grayscale(io.imread(p))
+    img = read_img(p)
+    hi, h_opt, enhanced_img = histogram_enhancement(img, l, g)
+    plt.plot(list(range(len(h_opt))), hi, color='blue')
+    plt.plot(list(range(len(h_opt))), h_opt, color='red')
+    plt.figlegend(["original", "enhanced"])
+    plt.show()
+    show_imgs([img, enhanced_img])
 
-    histogram_enhancement(img, l)
+
+
+def read_img(path):
+    img = io.imread(path)
+    try:
+        return convert_to_grayscale(img)
+    except:
+        return img
 
 
 if __name__ == "__main__":
