@@ -49,7 +49,7 @@ def binarizar(img, umbral):
 
 
 def accumulative_relative_frequency_function(n, p, bins=256):
-    return min(255, math.floor((bins-1) * sum(p[:n]) + 0.5))
+    return math.floor((bins-1) * sum(p[:n]) + 0.5)
 
 
 def ecualizar_histograma(img, hi):
