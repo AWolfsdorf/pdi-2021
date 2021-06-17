@@ -84,6 +84,9 @@ probs = zeros(numClasses,numImages);
 
 %%% IMPLEMENTACION AQUI %%%
 hiddenSize = size(activationsPooled,1);
+weightedActivations = Wd * activationsPooled + bd;
+
+probs = softmax(weightedActivations);
 
 %%======================================================================
 %% PASO 1b: Calculo del Costo
@@ -91,8 +94,18 @@ hiddenSize = size(activationsPooled,1);
 %  objetivo de tipo softmax. El resultado se guarda en cost.
 
 cost = 0; % inicializo cost
+% costTheta = [Wd bd];
 
 %%% IMPLEMENTAR AQUI %%%
+for imageNum = 1:numImages
+    for classNum = 1:numClasses
+        if labels(imageNum) == classNum
+            cost = cost + log(probs(classNum, imageNum));
+        end
+    end
+end
+
+cost = -cost / numImages;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % Realizar predicciones usando probs y devolver la funcion si calculo de gradientes.
@@ -114,6 +127,20 @@ end;
 %  eficiente.
 
 %%% IMPLEMENTAR AQUI %%%
+errorSoftmax = zeros(numClasses);
+
+for k = 1:numClasses
+    for imageNum = 1:numImages
+        oneIfTarget = 0;
+        if labels(imageNum) == k
+            oneIfTarget = 1;
+        end
+        
+        errorSoftmax(k) = errorSoftmax(k) - activationsPooled(:, imageNum) * (oneIfTarget - probs(k, imageNum));
+    end
+end
+
+deltaPool = (1/(poolDim*poolDim)) * kron(delta,ones(poolDim));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -130,5 +157,18 @@ end;
 
 %% Desenrollar los gradientes en un vector para usar luego por minFunc
 grad = [Wc_grad(:) ; Wd_grad(:) ; bc_grad(:) ; bd_grad(:)];
+
+end
+
+function mu = softmax(eta)
+    % Softmax function
+    % mu(i,c) = exp(eta(i,c))/sum_c' exp(eta(i,c'))
+
+    % This file is from matlabtools.googlecode.com
+    c = 3;
+
+    tmp = exp(c*eta);
+    denom = sum(tmp, 2);
+    mu = bsxfun(@rdivide, tmp, denom);
 
 end

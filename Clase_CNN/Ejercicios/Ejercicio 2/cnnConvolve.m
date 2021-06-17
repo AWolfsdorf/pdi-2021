@@ -46,17 +46,20 @@ for imageNum = 1:numImages
         % Convolucionar "filter" con "im", y adicionarlos a 
         % convolvedImage para estar seguro de realizar una convolucion
         % 'valida'
-        convolvedImage = 0;
+        convolvedImage = conv2(im, filter, 'valid');
 
         % Agregar el bias 
         % Luego, aplicar la funcion sigmoide para obtener la activacion de 
         % la neurona.
 
         %%% IMPLEMENTACION AQUI %%%
-        convolvedFeatures(:, :, filterNum, imageNum) = 0;
+        convolvedFeatures(:, :, filterNum, imageNum) = sigmoid(convolvedImage + bc(filterNum));
     end
 end
 
 
 end
 
+function s = sigmoid(z)
+    s = (1./(1+exp(-z)));
+end
